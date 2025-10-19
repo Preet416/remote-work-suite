@@ -3,13 +3,21 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
+const path = require("path"); // for serving frontend
 
 const app = express();
 app.use(cors());
 
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*", methods: ["GET","POST"] } });
 
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+});
+
+// ------------------- Socket.io Logic -------------------
 // Rooms: { roomId: { approved: Set<socketId>, waiting: Set<socketId> } }
 const rooms = {};
 
@@ -61,5 +69,16 @@ io.on("connection", (socket) => {
     });
   });
 });
+// ------------------------------------------------------
 
-server.listen(5000, () => console.log("Server running on port 5000"));
+// ------------------- Serve React Frontend -------------------
+const frontendPath = path.join(__dirname, "build");
+app.use(express.static(frontendPath));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(frontendPath, "index.html"));
+});
+// ------------------------------------------------------
+
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
