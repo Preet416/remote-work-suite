@@ -10,13 +10,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "lucide-react": "^0.546.0",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "react-router-dom": "^7.9.4",
-    "simple-peer": "^9.11.1",
-    "socket.io-client": "^4.8.1"
-  },
+  "@supabase/supabase-js": "^2.27.0",
+  "lucide-react": "^0.546.0",
+  "react": "^19.1.1",
+  "react-dom": "^19.1.1",
+  "react-router-dom": "^7.9.4",
+  "simple-peer": "^9.11.1",
+  "socket.io-client": "^4.8.1"
+},
+
   "devDependencies": {
     "@eslint/js": "^9.36.0",
     "@tailwindcss/postcss7-compat": "^2.2.17",
