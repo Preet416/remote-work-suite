@@ -1,115 +1,139 @@
 import React, { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import axios from "axios";
+import { v4 as uuidv4 } from "uuid"; // ✅ added for unique IDs
 
-export default function TasksBoard() {
-  const [activeView, setActiveView] = useState("team");
+export default function TasksBoard({ currentUser, role }) {
+  const userRole = role || currentUser?.user_metadata?.role || "employee";
 
-  const initialTeamColumns = {
+  const [columns, setColumns] = useState({
     todo: { name: "To Do", items: [] },
     inprogress: { name: "In Progress", items: [] },
     review: { name: "Review", items: [] },
     done: { name: "Done", items: [] },
-  };
-
-  const initialPersonalColumns = {
-    todo: { name: "To Do", items: [] },
-    inprogress: { name: "In Progress", items: [] },
-    done: { name: "Done", items: [] },
-  };
-
-  const [teamColumns, setTeamColumns] = useState(() => {
-    const saved = localStorage.getItem("teamTasks");
-    return saved ? JSON.parse(saved) : initialTeamColumns;
-  });
-
-  const [personalColumns, setPersonalColumns] = useState(() => {
-    const saved = localStorage.getItem("personalTasks");
-    return saved ? JSON.parse(saved) : initialPersonalColumns;
   });
 
   const [taskData, setTaskData] = useState({
     title: "",
     description: "",
     assignedTo: "",
+    status: "todo",
   });
 
-  useEffect(() => {
-    localStorage.setItem("teamTasks", JSON.stringify(teamColumns));
-  }, [teamColumns]);
+  // Fetch tasks
+  const fetchTasks = async () => {
+    if (!currentUser?.email || !userRole) return;
+    try {
+      const res = await axios.get("http://localhost:5000/api/tasks", {
+        params: { email: currentUser.email, role: userRole },
+      });
 
-  useEffect(() => {
-    localStorage.setItem("personalTasks", JSON.stringify(personalColumns));
-  }, [personalColumns]);
+      const tasks = res.data || [];
 
-  const handleAddTask = () => {
-    if (!taskData.title.trim()) return alert("Enter task title!");
-    const newTask = { id: Date.now().toString(), ...taskData };
-    if (activeView === "team") {
-      setTeamColumns((prev) => ({
-        ...prev,
-        todo: { ...prev.todo, items: [...prev.todo.items, newTask] },
-      }));
-    } else {
-      setPersonalColumns((prev) => ({
-        ...prev,
-        todo: { ...prev.todo, items: [...prev.todo.items, newTask] },
-      }));
+      const newColumns = {
+        todo: { name: "To Do", items: [] },
+        inprogress: { name: "In Progress", items: [] },
+        review: { name: "Review", items: [] },
+        done: { name: "Done", items: [] },
+      };
+
+      tasks.forEach((task) => {
+        if (!task.id) task.id = uuidv4(); // ensure unique
+        if (!newColumns[task.status]) {
+          newColumns[task.status] = { name: task.status, items: [] };
+        }
+        newColumns[task.status].items.push(task);
+      });
+
+      setColumns(newColumns);
+    } catch (err) {
+      console.error("Failed to fetch tasks", err);
+      alert("Failed to fetch tasks");
     }
-    setTaskData({ title: "", description: "", assignedTo: "" });
   };
 
-  const handleDeleteTask = (columnId, index) => {
-    const columns = activeView === "team" ? { ...teamColumns } : { ...personalColumns };
-    columns[columnId].items.splice(index, 1);
-    if (activeView === "team") setTeamColumns(columns);
-    else setPersonalColumns(columns);
+  useEffect(() => {
+    fetchTasks();
+  }, [currentUser?.email, userRole]);
+
+  // Add new task
+  const handleAddTask = async () => {
+    if (!taskData.title.trim()) return alert("Enter task title!");
+    const newTask = {
+      ...taskData,
+      assignedTo: taskData.assignedTo || currentUser.email,
+      id: uuidv4(), // ensure unique id before sending
+    };
+
+    try {
+      const res = await axios.post("http://localhost:5000/api/tasks", newTask, {
+        headers: { "Content-Type": "application/json" },
+      });
+
+      let addedTask = res.data || newTask;
+
+      if (!addedTask.id) addedTask.id = newTask.id;
+
+      // ✅ Update frontend instantly
+      setColumns((prev) => {
+        const updated = { ...prev };
+        const exists = updated.todo.items.find((item) => item.id === addedTask.id);
+        if (!exists) {
+          updated.todo.items = [...updated.todo.items, addedTask];
+        }
+        return updated;
+      });
+
+      setTaskData({ title: "", description: "", assignedTo: "", status: "todo" });
+    } catch (err) {
+      console.error("Failed to add task", err);
+      alert("Failed to add task");
+    }
   };
 
-  const onDragEnd = (result) => {
+  // Delete task
+  const handleDeleteTask = async (taskId) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/tasks/${taskId}`);
+      setColumns((prev) => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach((col) => {
+          updated[col].items = updated[col].items.filter((item) => item.id !== taskId);
+        });
+        return updated;
+      });
+    } catch (err) {
+      console.error("Failed to delete task", err);
+      alert("Failed to delete task");
+    }
+  };
+
+  // Drag and drop
+  const onDragEnd = async (result) => {
     if (!result.destination) return;
     const { source, destination } = result;
+    if (!source || !destination) return;
 
-    const columns = activeView === "team" ? { ...teamColumns } : { ...personalColumns };
     const sourceCol = columns[source.droppableId];
     const destCol = columns[destination.droppableId];
     const [movedItem] = sourceCol.items.splice(source.index, 1);
+    movedItem.status = destination.droppableId;
     destCol.items.splice(destination.index, 0, movedItem);
+    setColumns({ ...columns });
 
-    if (activeView === "team") setTeamColumns(columns);
-    else setPersonalColumns(columns);
+    try {
+      await axios.put(`http://localhost:5000/api/tasks/${movedItem.id}`, movedItem, {
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (err) {
+      console.error("Failed to update task status", err);
+      alert("Failed to update task status");
+    }
   };
-
-  const currentColumns = activeView === "team" ? teamColumns : personalColumns;
 
   return (
     <div className="flex-1 flex flex-col w-full h-full bg-gray-900 p-4 overflow-hidden text-gray-100">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-indigo-400">
-          {activeView === "team" ? "Team Tasks Board" : "My Personal Tasks Board"}
-        </h1>
-        <div className="space-x-2">
-          <button
-            onClick={() => setActiveView("team")}
-            className={`px-4 py-2 rounded-lg font-semibold transition ${
-              activeView === "team"
-                ? "bg-indigo-600 text-white"
-                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-            }`}
-          >
-            Team Tasks
-          </button>
-          <button
-            onClick={() => setActiveView("personal")}
-            className={`px-4 py-2 rounded-lg font-semibold transition ${
-              activeView === "personal"
-                ? "bg-indigo-600 text-white"
-                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-            }`}
-          >
-            My Tasks
-          </button>
-        </div>
-      </div>
+      <h1 className="text-2xl font-bold text-indigo-400 mb-4">Tasks Board</h1>
 
       <div className="bg-gray-800 shadow-md p-4 rounded-lg mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
         <input
@@ -143,7 +167,7 @@ export default function TasksBoard() {
       <div className="flex-1 overflow-auto">
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 h-full">
-            {Object.entries(currentColumns).map(([id, column]) => (
+            {Object.entries(columns).map(([id, column]) => (
               <Droppable key={id} droppableId={id}>
                 {(provided) => (
                   <div
@@ -174,7 +198,7 @@ export default function TasksBoard() {
                                 )}
                               </div>
                               <button
-                                onClick={() => handleDeleteTask(id, index)}
+                                onClick={() => handleDeleteTask(item.id)}
                                 className="text-red-400 hover:text-red-600 font-bold ml-2"
                               >
                                 ✕

@@ -7,23 +7,12 @@ import MeetingRoom from "./MeetingRoom";
 import Chat from "./Chat";
 import { Menu, X } from "lucide-react";
 
-export default function Dashboard({ onLogout, currentUser }) {
+export default function Dashboard({ onLogout, currentUser, isHost, roomId }) {
   const [activeTab, setActiveTab] = useState("docs");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isHost, setIsHost] = useState(false);
 
   const [searchParams] = useSearchParams();
-  const roomFromURL = searchParams.get("room") || "project-room-1";
-
-  useEffect(() => {
-    // If this user is the first in the room, make them host
-    // This logic assumes MeetingRoom will notify if room is empty
-    setIsHost(true); // initially assume host
-  }, [roomFromURL]);
-
-  const handleLogout = () => {
-    if (onLogout) onLogout();
-  };
+  const roomFromURL = searchParams.get("room") || roomId || "project-room-1";
 
   const renderContent = () => {
     switch (activeTab) {
@@ -32,14 +21,17 @@ export default function Dashboard({ onLogout, currentUser }) {
       case "whiteboard":
         return <Whiteboard />;
       case "tasks":
-        return <TasksBoard />;
+      return <TasksBoard currentUser={currentUser} />;
       case "chat":
-        return <Chat username={currentUser || "User"} room="team-room" />;
+        return <Chat username={currentUser.name || currentUser.email || "User"} room="team-room" />;
       case "meeting":
         return (
           <MeetingRoom
             roomId={roomFromURL}
-            username={currentUser || "User"}
+            currentUser={{
+              email: currentUser.email || currentUser,
+              name: currentUser.name || currentUser,
+            }}
             isHost={isHost}
           />
         );
@@ -49,11 +41,11 @@ export default function Dashboard({ onLogout, currentUser }) {
   };
 
   const tabs = [
-    { key: "docs", label: "📝 Docs" },
-    { key: "whiteboard", label: "🎨 Whiteboard" },
-    { key: "tasks", label: "📋 Tasks" },
-    { key: "chat", label: "💬 Chat" },
-    { key: "meeting", label: "📹 Meeting" },
+    { key: "docs", label: " Docs" },
+    { key: "whiteboard", label: "Whiteboard" },
+    { key: "tasks", label: "Tasks" },
+    { key: "chat", label: "Chat" },
+    { key: "meeting", label: "Meeting" },
   ];
 
   return (
@@ -82,10 +74,9 @@ export default function Dashboard({ onLogout, currentUser }) {
                 setSidebarOpen(false);
               }}
               className={`px-4 py-2 text-left rounded-lg font-medium transition-all transform
-                ${
-                  activeTab === tab.key
-                    ? "bg-indigo-600 text-white scale-105 shadow-lg"
-                    : "bg-gray-700 text-gray-200 hover:bg-indigo-500/40 hover:text-white hover:scale-105"
+                ${activeTab === tab.key
+                  ? "bg-indigo-600 text-white scale-105 shadow-lg"
+                  : "bg-gray-700 text-gray-200 hover:bg-indigo-500/40 hover:text-white hover:scale-105"
                 }`}
             >
               {tab.label}
@@ -93,7 +84,7 @@ export default function Dashboard({ onLogout, currentUser }) {
           ))}
 
           <button
-            onClick={handleLogout}
+            onClick={onLogout}
             className="mt-auto px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 shadow-md transition-all"
           >
             🚪 Logout
@@ -113,9 +104,7 @@ export default function Dashboard({ onLogout, currentUser }) {
 
       {/* Main content */}
       <div
-        className={`flex-1 flex flex-col h-full w-full transition-all duration-300 ${
-          sidebarOpen ? "md:ml-64" : "md:ml-0"
-        } p-6 bg-gray-900`}
+        className={`flex-1 flex flex-col h-full w-full transition-all duration-300 ${sidebarOpen ? "md:ml-64" : "md:ml-0"} p-6 bg-gray-900`}
       >
         <div className="flex-1 flex flex-col w-full h-full overflow-hidden">
           {renderContent()}

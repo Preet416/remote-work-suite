@@ -7,7 +7,7 @@ export default function LandingPage({ onShowAuth }) {
       {/* 🌐 Navbar */}
       <nav className="fixed top-0 left-0 w-full z-50 bg-gray-900/95 backdrop-blur-md shadow-md py-4 px-8 flex justify-between items-center">
         <h1 className="text-2xl font-bold tracking-tight text-indigo-400">
-          RemoteWork AI
+          Kryvo
         </h1>
         <div className="space-x-4">
           <button
@@ -16,19 +16,19 @@ export default function LandingPage({ onShowAuth }) {
           >
             Sign In
           </button>
-          <button
+          {/*<button
             className="bg-indigo-500 text-white px-5 py-2 rounded-lg hover:bg-indigo-600 transition"
             onClick={onShowAuth}
           >
             Sign Up
-          </button>
+          </button> */}
         </div>
       </nav>
 
       {/* 🎯 Section 1: Hero */}
       <section className="w-screen min-h-[120vh] flex flex-col justify-center items-center text-center px-6 md:px-20 pt-32 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900">
         <h1 className="text-6xl md:text-7xl font-extrabold mb-6 tracking-tight text-indigo-400">
-          Remote Work Suite
+          AI Remote Work Suite Management
         </h1>
         <p className="text-2xl md:text-3xl mb-6 max-w-3xl mx-auto text-gray-300">
           Powered by AI Assistant — Collaborate, Communicate, and Create Seamlessly from Anywhere.
@@ -38,9 +38,14 @@ export default function LandingPage({ onShowAuth }) {
         </p>
 
         {/* Hero image placeholder */}
-        <div className="w-full max-w-4xl h-80 bg-gray-700 rounded-xl mb-12 flex items-center justify-center text-gray-300">
-          Hero Image / Illustration
-        </div>
+       <div className="w-full max-w-5xl h-[28rem] bg-gray-700 rounded-xl mb-12 flex items-center justify-center overflow-hidden">
+        <img
+         src="/banner1.jpeg"
+         alt="Hero Image"
+         className="w-full h-full object-cover rounded-xl"
+  />
+</div>
+
 
         <button
           className="bg-indigo-500 text-white font-bold px-10 py-4 rounded-xl hover:bg-indigo-600 transition text-lg shadow-lg"
@@ -55,11 +60,17 @@ export default function LandingPage({ onShowAuth }) {
         <h2 className="text-4xl md:text-5xl font-bold mb-12 text-center text-indigo-400">
           AI-Powered Productivity
         </h2>
+
+        
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 items-start">
           {/* Card 1 */}
           <div className="bg-gray-900 rounded-xl p-8 shadow-lg hover:shadow-2xl transition transform hover:-translate-y-2 hover:scale-105 flex flex-col items-center">
             <div className="w-full h-40 bg-gray-700 rounded mb-6 flex items-center justify-center text-gray-400">
-              AI Illustration
+               <img
+                 src="/ai-illustration.png"
+                 alt="AI Illustration"
+                 className="w-full h-full object-cover rounded"
+              />
             </div>
             <h3 className="text-2xl font-semibold mb-4 text-indigo-300">Smart Task Management</h3>
             <p className="text-gray-400 text-center">
@@ -70,7 +81,11 @@ export default function LandingPage({ onShowAuth }) {
           {/* Card 2 */}
           <div className="bg-gray-900 rounded-xl p-8 shadow-lg hover:shadow-2xl transition transform hover:-translate-y-2 hover:scale-105 flex flex-col items-center">
             <div className="w-full h-40 bg-gray-700 rounded mb-6 flex items-center justify-center text-gray-400">
-              AI Illustration
+                <img
+                 src="/AiDoc.png"
+                 alt="AI Illustration"
+                 className="w-full h-full object-cover rounded"
+               />
             </div>
             <h3 className="text-2xl font-semibold mb-4 text-indigo-300">AI Document Assistance</h3>
             <p className="text-gray-400 text-center">
@@ -81,7 +96,11 @@ export default function LandingPage({ onShowAuth }) {
           {/* Card 3 */}
           <div className="bg-gray-900 rounded-xl p-8 shadow-lg hover:shadow-2xl transition transform hover:-translate-y-2 hover:scale-105 flex flex-col items-center">
             <div className="w-full h-40 bg-gray-700 rounded mb-6 flex items-center justify-center text-gray-400">
-              AI Illustration
+              <img
+                 src="/team.png"
+                 alt="AI Illustration"
+                 className="w-full h-full object-cover rounded"
+             />
             </div>
             <h3 className="text-2xl font-semibold mb-4 text-indigo-300">Team Insights</h3>
             <p className="text-gray-400 text-center">
